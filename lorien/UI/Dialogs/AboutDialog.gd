@@ -1,12 +1,12 @@
-extends WindowDialog
+extends Window
 
 # -------------------------------------------------------------------------------------------------
-onready var _version_label: Label = $MarginContainer/VBoxContainer/HBoxContainer/MarginContainer/VBoxContainer/VersionLabel
+@onready var _version_label: Label = $MarginContainer/VBoxContainer/HBoxContainer/MarginContainer/VBoxContainer/VersionLabel
 
 # -------------------------------------------------------------------------------------------------
 func _ready():
 	_version_label.text = "Lorien v%s" % Config.VERSION_STRING
-	rect_size.y = $MarginContainer.rect_size.y + 5
+	size.y = $MarginContainer.size.y + 5
 
 # -------------------------------------------------------------------------------------------------
 func _on_GithubLinkButton_pressed():

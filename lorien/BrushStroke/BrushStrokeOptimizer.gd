@@ -36,9 +36,9 @@ func optimize(s: BrushStroke) -> void:
 		var distance_cond = distance > max_distance # TODO: make dependent on zoom level
 	
 		# Angle between points must be beigger than x deg
-		var angle := rad2deg(prev_point.angle_to_point(point))
-		var angle_diff := abs(abs(angle) - abs(previous_angle))
-		var angle_cond := angle_diff >= max_angle_diff
+		var angle := rad_to_deg(prev_point.angle_to_point(point))
+		var angle_diff :float= abs(abs(angle) - abs(previous_angle))
+		var angle_cond :bool= angle_diff >= max_angle_diff
 		previous_angle = angle
 		
 		var point_too_far_away = distance > 100

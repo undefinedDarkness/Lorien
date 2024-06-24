@@ -1,11 +1,13 @@
-class_name BaseCursor, "res://Assets/Icons/cursor_icon.png"
-extends Sprite
+@icon( "res://Assets/Icons/cursor_icon.png")
+
+class_name BaseCursor
+extends Sprite2D
 
 # -------------------------------------------------------------------------------------------------
 var _brush_size: int
 var _pressure := 1.0
 
-onready var _camera: Camera2D = get_viewport().get_node("Camera2D")
+@onready var _camera: Camera2D = get_viewport().get_node("Camera2D")
 
 # -------------------------------------------------------------------------------------------------
 func _ready() -> void:

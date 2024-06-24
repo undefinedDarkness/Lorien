@@ -5,14 +5,21 @@ const UUID_ALPHABET := "abcdefghijklmnopqrstuvwxyz0123456789"
 
 # -------------------------------------------------------------------------------------------------
 func get_native_mouse_position_on_screen() -> Vector2:
-	return OS.window_position + get_viewport().get_mouse_position()
+	return Vector2(get_window().position) + get_viewport().get_mouse_position()
 
 # -------------------------------------------------------------------------------------------------
 func remove_signal_connections(node: Node, signal_name: String) -> void:
 	for conn in node.get_signal_connection_list(signal_name):
-		node.disconnect(conn["signal"], conn["target"], conn["method"])
+		node.disconnect(conn["signal"], Callable(conn["target"], conn["method"]))
 
 # -------------------------------------------------------------------------------------------------
+func is_mouse_in_control_w(control: Window) -> bool:
+	if control.visible:
+		var pos = get_viewport().get_mouse_position()
+		var rect = control.get_visible_rect()
+		return rect.has_point(pos)
+	return false
+	
 func is_mouse_in_control(control: Control) -> bool:
 	if control.visible:
 		var pos = get_viewport().get_mouse_position()
@@ -48,7 +55,7 @@ func calculte_bounding_boxes(strokes: Array, margin: float = 0.0) -> Dictionary:
 	
 # -------------------------------------------------------------------------------------------------
 func return_timestamp_string() -> String:
-	var today := OS.get_datetime()
+	var today := Time.get_datetime_dict_from_system()
 	return "%s%s%s_%s%s%s" % [today.day, today.month, today.year, today.hour, today.minute, today.second]
 
 # -------------------------------------------------------------------------------------------------
@@ -64,7 +71,7 @@ func is_valid_lorien_file(filepath: String) -> bool:
 func generate_uuid(length: int) -> String:
 	var s := ""
 	for i in length:
-		var idx: int = rand_range(0, UUID_ALPHABET.length()-1)
+		var idx: int = randf_range(0, UUID_ALPHABET.length()-1)
 		s += UUID_ALPHABET[idx]
 	return s
 

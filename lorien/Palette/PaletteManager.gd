@@ -43,7 +43,7 @@ func create_custom_palette(palette_name: String) -> Palette:
 	palette.name = palette_name
 	palette.builtin = false
 	palette.uuid = Utils.generate_uuid(UUID_LENGTH)
-	palette.colors = PoolColorArray([Color.white, Color.black])
+	palette.colors = PackedColorArray([Color.WHITE, Color.BLACK])
 	palettes.append(palette)
 	_sort()
 	
@@ -67,7 +67,7 @@ func remove_palette(palette: Palette) -> bool:
 		if index >= 0:
 			if index == _active_palette_index:
 				_active_palette_index = 0
-			palettes.remove(index)
+			palettes.remove_at(index)
 			return true
 	return false
 		
@@ -98,7 +98,7 @@ func get_active_palette_index() -> int:
 
 # -------------------------------------------------------------------------------------------------
 func _sort() -> void:
-	palettes.sort_custom(PaletteSorter, "sort_descending")
+	palettes.sort_custom(Callable(PaletteSorter, "sort_descending"))
 
 # -------------------------------------------------------------------------------------------------
 func _find_palette_index_by_uuid(uuid: String) -> int:

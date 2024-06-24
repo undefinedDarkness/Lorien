@@ -1,13 +1,13 @@
 class_name Player
-extends KinematicBody2D
+extends CharacterBody2D
 
 # -------------------------------------------------------------------------------------------------
-export var speed: float = 400
-export var jump_power: float = 1000
-export var gravity: float = 60
-onready var _sprite: AnimatedSprite = $AnimatedSprite
-onready var _col_shape_normal: CollisionShape2D = $CollisionShapeNormal
-onready var _col_shape_crouching: CollisionShape2D = $CollisionShapeCrouching
+@export var speed: float = 400
+@export var jump_power: float = 1000
+@export var gravity: float = 60
+@onready var _sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var _col_shape_normal: CollisionShape2D = $CollisionShapeNormal
+@onready var _col_shape_crouching: CollisionShape2D = $CollisionShapeCrouching
 var _velocity: Vector2 = Vector2.ZERO
 
 func _physics_process(delta: float) -> void:
@@ -36,7 +36,14 @@ func _physics_process(delta: float) -> void:
 	_col_shape_normal.disabled = is_crouching
 		
 
-	_velocity = move_and_slide(_velocity, Vector2.UP, false, 4, PI/4.0, false)
+	set_velocity(_velocity)
+	set_up_direction(Vector2.UP)
+	set_floor_stop_on_slope_enabled(false)
+	set_max_slides(4)
+	set_floor_max_angle(PI/4.0)
+	# TODOConverter3To4 infinite_inertia were removed in Godot 4 - previous value `false`
+	move_and_slide()
+	_velocity = velocity
 
 # -------------------------------------------------------------------------------------------------
 func reset(global_pos: Vector2) -> void:

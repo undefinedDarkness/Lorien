@@ -14,27 +14,27 @@ signal tool_changed(t)
 # -------------------------------------------------------------------------------------------------
 const BUTTON_HOVER_COLOR = Color("50ffd6")
 const BUTTON_CLICK_COLOR = Color("50ffd6")
-const BUTTON_NORMAL_COLOR = Color.white
+const BUTTON_NORMAL_COLOR = Color.WHITE
 
 # -------------------------------------------------------------------------------------------------
-export var file_dialog_path: NodePath
+@export var file_dialog_path: NodePath
 
-onready var _new_button: TextureButton = $Console/Left/NewFileButton
-onready var _save_button: TextureButton = $Console/Left/SaveFileButton
-onready var _open_button: TextureButton = $Console/Left/OpenFileButton
-onready var _clear_canvas_button: TextureButton = $Console/Left/ClearCanvasButton
-onready var _undo_button: TextureButton = $Console/Left/UndoButton
-onready var _redo_button: TextureButton = $Console/Left/RedoButton
-onready var _color_button: Button = $Console/Left/ColorButton
-onready var _brush_size_label: Label = $Console/Left/BrushSizeLabel
-onready var _brush_size_slider: HSlider = $Console/Left/BrushSizeSlider
-onready var _fullscreen_btn: TextureButton = $Console/Right/FullscreenButton
-onready var _tool_btn_brush: TextureButton = $Console/Left/BrushToolButton
-onready var _tool_btn_rectangle: TextureButton = $Console/Left/RectangleToolButton
-onready var _tool_btn_circle: TextureButton = $Console/Left/CircleToolButton
-onready var _tool_btn_line: TextureButton = $Console/Left/LineToolButton
-onready var _tool_btn_eraser: TextureButton = $Console/Left/EraserToolButton
-onready var _tool_btn_selection: TextureButton = $Console/Left/SelectionToolButton
+@onready var _new_button: TextureButton = $Console/Left/NewFileButton
+@onready var _save_button: TextureButton = $Console/Left/SaveFileButton
+@onready var _open_button: TextureButton = $Console/Left/OpenFileButton
+@onready var _clear_canvas_button: TextureButton = $Console/Left/ClearCanvasButton
+@onready var _undo_button: TextureButton = $Console/Left/UndoButton
+@onready var _redo_button: TextureButton = $Console/Left/RedoButton
+@onready var _color_button: Button = $Console/Left/ColorButton
+@onready var _brush_size_label: Label = $Console/Left/BrushSizeLabel
+@onready var _brush_size_slider: HSlider = $Console/Left/BrushSizeSlider
+@onready var _fullscreen_btn: TextureButton = $Console/Right/FullscreenButton
+@onready var _tool_btn_brush: TextureButton = $Console/Left/BrushToolButton
+@onready var _tool_btn_rectangle: TextureButton = $Console/Left/RectangleToolButton
+@onready var _tool_btn_circle: TextureButton = $Console/Left/CircleToolButton
+@onready var _tool_btn_line: TextureButton = $Console/Left/LineToolButton
+@onready var _tool_btn_eraser: TextureButton = $Console/Left/EraserToolButton
+@onready var _tool_btn_selection: TextureButton = $Console/Left/SelectionToolButton
 
 var _last_active_tool_button: TextureButton
 
@@ -69,13 +69,13 @@ func enable_tool(tool_type: int) -> void:
 
 # -------------------------------------------------------------------------------------------------
 func set_brush_color(color: Color) -> void:
-	_color_button.get("custom_styles/normal").bg_color = color
+	_color_button.get("theme_override_styles/normal").bg_color = color
 	var lum := color.r * 0.2126 + color.g * 0.7152 + color.b * 0.0722
-	var text_color := Color.black if lum > 0.4 else Color.white	
-	_color_button.set("custom_colors/font_color", text_color)
-	_color_button.set("custom_colors/font_color_hover", text_color)
-	_color_button.set("custom_colors/font_color_pressed", text_color)
-	_color_button.set("custom_colors/font_color_focus", text_color)
+	var text_color := Color.BLACK if lum > 0.4 else Color.WHITE	
+	_color_button.set("theme_override_colors/font_color", text_color)
+	_color_button.set("theme_override_colors/font_hover_color", text_color)
+	_color_button.set("theme_override_colors/font_pressed_color", text_color)
+	_color_button.set("theme_override_colors/font_focus_color", text_color)
 	_color_button.text = "#" + color.to_html(false)
 
 # -------------------------------------------------------------------------------------------------
@@ -85,9 +85,9 @@ func set_fullscreen_toggle(pressed):
 # -------------------------------------------------------------------------------------------------
 func _on_OpenFileButton_pressed():
 	var file_dialog: FileDialog = get_node(file_dialog_path)
-	file_dialog.mode = FileDialog.MODE_OPEN_FILE
-	file_dialog.connect("file_selected", self, "_on_project_selected_to_open")
-	file_dialog.connect("popup_hide", self, "_on_file_dialog_closed")
+	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	file_dialog.connect("file_selected", Callable(self, "_on_project_selected_to_open"))
+	file_dialog.connect("confirmed", Callable(self, "_on_file_dialog_closed"))
 	file_dialog.invalidate()
 	file_dialog.popup_centered()
 
@@ -151,7 +151,7 @@ func _on_SelectToolButton_pressed():
 
 # -------------------------------------------------------------------------------------------------
 func _on_FullscreenButton_toggled(button_pressed):
-	OS.set_window_fullscreen(button_pressed)
+	get_window().mode = Window.MODE_EXCLUSIVE_FULLSCREEN if (button_pressed) else Window.MODE_WINDOWED
 
 # -------------------------------------------------------------------------------------------------
 func _change_active_tool_button(btn: TextureButton) -> void:

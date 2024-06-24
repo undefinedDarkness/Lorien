@@ -1,4 +1,4 @@
-extends ViewportContainer
+extends SubViewportContainer
 class_name InfiniteCanvas
 
 # -------------------------------------------------------------------------------------------------
@@ -6,24 +6,24 @@ const BRUSH_STROKE = preload("res://BrushStroke/BrushStroke.tscn")
 const PLAYER = preload("res://Misc/Player/Player.tscn")
 
 # -------------------------------------------------------------------------------------------------
-onready var _brush_tool: BrushTool = $BrushTool
-onready var _rectangle_tool: RectangleTool = $RectangleTool
-onready var _line_tool: LineTool = $LineTool
-onready var _circle_tool: CircleTool = $CircleTool
-onready var _eraser_tool: EraserTool = $EraserTool
-onready var _selection_tool: SelectionTool = $SelectionTool
-onready var _active_tool: CanvasTool = _brush_tool
-onready var _active_tool_type: int = Types.Tool.BRUSH
-onready var _strokes_parent: Node2D = $Viewport/Strokes
-onready var _camera: Camera2D = $Viewport/Camera2D
-onready var _viewport: Viewport = $Viewport
-onready var _grid: InfiniteCanvasGrid = $Viewport/Grid
+@onready var _brush_tool: BrushTool = $BrushTool
+@onready var _rectangle_tool: RectangleTool = $RectangleTool
+@onready var _line_tool: LineTool = $LineTool
+@onready var _circle_tool: CircleTool = $CircleTool
+@onready var _eraser_tool: EraserTool = $EraserTool
+@onready var _selection_tool: SelectionTool = $SelectionTool
+@onready var _active_tool: CanvasTool = _brush_tool
+@onready var _active_tool_type: int = Types.Tool.BRUSH
+@onready var _strokes_parent: Node2D = $SubViewport/Strokes
+@onready var _camera: Camera2D = $SubViewport/Camera2D
+@onready var _viewport: SubViewport = $SubViewport
+@onready var _grid: InfiniteCanvasGrid = $SubViewport/Grid
 
 var info := Types.CanvasInfo.new()
 var _is_enabled := false
 var _background_color: Color
 var _brush_color := Config.DEFAULT_BRUSH_COLOR
-var _brush_size := Config.DEFAULT_BRUSH_SIZE setget set_brush_size
+var _brush_size := Config.DEFAULT_BRUSH_SIZE: set = set_brush_size
 var _current_stroke: BrushStroke
 var _current_project: Project
 var _use_optimizer := true
@@ -41,21 +41,22 @@ func _ready():
 	_active_tool._on_brush_size_changed(_brush_size)
 	_active_tool.enabled = false
 	
-	get_tree().get_root().connect("size_changed", self, "_on_window_resized")
+	get_tree().get_root().connect("size_changed", Callable(self, "_on_window_resized"))
 	
-	for child in $Viewport.get_children():
+	for child in $SubViewport.get_children():
 		if child is BaseCursor:
-			_camera.connect("zoom_changed", child, "_on_zoom_changed")
-			_camera.connect("position_changed", child, "_on_canvas_position_changed")
+			_camera.connect("zoom_changed", Callable(child, "_on_zoom_changed"))
+			_camera.connect("position_changed", Callable(child, "_on_canvas_position_changed"))
 	
-	_camera.connect("zoom_changed", self, "_on_zoom_changed")
-	_camera.connect("position_changed", self, "_on_camera_moved")
-	_viewport.size = OS.window_size
+	_camera.connect("zoom_changed", Callable(self, "_on_zoom_changed"))
+	_camera.connect("position_changed", Callable(self, "_on_camera_moved"))
+	self.stretch = false
+	_viewport.size = get_window().size
 
 	info.pen_inverted = false
 
 # -------------------------------------------------------------------------------------------------
-func _unhandled_key_input(event: InputEventKey) -> void:
+func _unhandled_key_input(event: InputEvent) -> void:
 	_process_event(event)
 
 # -------------------------------------------------------------------------------------------------
@@ -85,9 +86,9 @@ func _process_event(event: InputEvent) -> void:
 		if _active_tool == _selection_tool:
 			_delete_selected_strokes()
 	
-	if ! get_tree().is_input_handled():
+	if ! _viewport.is_input_handled():
 		_camera.tool_event(event)
-	if ! get_tree().is_input_handled():
+	if ! _viewport.is_input_handled():
 		if _active_tool.enabled:
 			_active_tool.tool_event(event)
 
@@ -132,7 +133,7 @@ func use_tool(tool_type: int) -> void:
 # -------------------------------------------------------------------------------------------------
 func set_background_color(color: Color) -> void:
 	_background_color = color
-	VisualServer.set_default_clear_color(_background_color)
+	RenderingServer.set_default_clear_color(_background_color)
 	_grid.set_canvas_color(_background_color)
 
 # -------------------------------------------------------------------------------------------------
@@ -148,7 +149,7 @@ func enable_player(enable: bool) -> void:
 		_player_enabled = enable
 		if enable:
 			if _player == null:
-				_player = PLAYER.instance()
+				_player = PLAYER.instantiate()
 			_player.reset(_active_tool.get_cursor().global_position)
 			_viewport.add_child(_player)
 		else:
@@ -163,7 +164,7 @@ func get_background_color() -> Color:
 	return _background_color
 
 # -------------------------------------------------------------------------------------------------
-func get_camera() -> Camera2D:
+func get_camera_3d() -> Camera2D:
 	return _camera
 
 # -------------------------------------------------------------------------------------------------
@@ -194,7 +195,7 @@ func take_screenshot() -> Image:
 
 # -------------------------------------------------------------------------------------------------
 func start_stroke() -> void:
-	_current_stroke = BRUSH_STROKE.instance()
+	_current_stroke = BRUSH_STROKE.instantiate()
 	_current_stroke.size = _brush_size
 	_current_stroke.color = _brush_color
 	
@@ -224,6 +225,12 @@ func remove_last_stroke_point() -> void:
 func remove_all_stroke_points() -> void:
 	_current_stroke.remove_all_points()
 
+func add_current_stroke_as_child():
+	_strokes_parent.add_child(_current_stroke)
+	
+func add_current_stroke_as_stroke():
+	_current_project.add_stroke(_current_stroke)
+
 # -------------------------------------------------------------------------------------------------
 func end_stroke() -> void:
 	if _current_stroke != null:
@@ -251,12 +258,14 @@ func end_stroke() -> void:
 			_strokes_parent.remove_child(_current_stroke)
 			
 			_current_project.undo_redo.create_action("Stroke")
-			_current_project.undo_redo.add_undo_method(self, "undo_last_stroke")
+			_current_project.undo_redo.add_undo_method(self.undo_last_stroke)
 			_current_project.undo_redo.add_undo_reference(_current_stroke)
-			_current_project.undo_redo.add_do_method(_strokes_parent, "add_child", _current_stroke)
+			#_current_project.undo_redo.add_do_method(_strokes_parent, "add_child", _current_stroke)
+			_current_project.undo_redo.add_do_method(self.add_current_stroke_as_child)
 			_current_project.undo_redo.add_do_property(info, "stroke_count", info.stroke_count + 1)
 			_current_project.undo_redo.add_do_property(info, "point_count", info.point_count + _current_stroke.points.size())
-			_current_project.undo_redo.add_do_method(_current_project, "add_stroke", _current_stroke)
+			#_current_project.undo_redo.add_do_method.call(_current_project, "add_stroke", _current_stroke)
+			_current_project.undo_redo.add_do_method(self.add_current_stroke_as_stroke)
 			_current_project.undo_redo.commit_action()
 		
 		_current_stroke = null
@@ -267,10 +276,10 @@ func add_strokes(strokes: Array) -> void:
 	var point_count := 0
 	for stroke in strokes:
 		point_count += stroke.points.size()
-		_current_project.undo_redo.add_undo_method(self, "undo_last_stroke")
+		_current_project.undo_redo.add_undo_method.call(self, "undo_last_stroke")
 		_current_project.undo_redo.add_undo_reference(stroke)
-		_current_project.undo_redo.add_do_method(_strokes_parent, "add_child", stroke)
-		_current_project.undo_redo.add_do_method(_current_project, "add_stroke", stroke)
+		_current_project.undo_redo.add_do_method.call(_strokes_parent, "add_child", stroke)
+		_current_project.undo_redo.add_do_method.call(_current_project, "add_stroke", stroke)
 	_current_project.undo_redo.add_do_property(info, "stroke_count", info.stroke_count + strokes.size())
 	_current_project.undo_redo.add_do_property(info, "point_count", info.point_count + point_count)
 	_current_project.undo_redo.commit_action()
@@ -294,11 +303,11 @@ func use_project(project: Project) -> void:
 		info.stroke_count += 1
 		info.point_count += stroke.points.size()
 	
-	_grid.update()
+	_grid.queue_redraw()
 	
 # -------------------------------------------------------------------------------------------------
 func undo_last_stroke() -> void:
-	if _current_stroke == null && !_current_project.strokes.empty():
+	if _current_stroke == null && !_current_project.strokes.is_empty():
 		var stroke = _strokes_parent.get_child(_strokes_parent.get_child_count() - 1)
 		_strokes_parent.remove_child(stroke)
 		_current_project.remove_last_stroke()
@@ -339,12 +348,12 @@ func _on_camera_moved(pos: Vector2) -> void:
 # -------------------------------------------------------------------------------------------------
 func _delete_selected_strokes() -> void:
 	var strokes := _selection_tool.get_selected_strokes()
-	if !strokes.empty():
+	if !strokes.is_empty():
 		_current_project.undo_redo.create_action("Delete Selection")
 		for stroke in strokes:
-			_current_project.undo_redo.add_do_method(self, "_do_delete_stroke", stroke)
+			_current_project.undo_redo.add_do_method.call(self, "_do_delete_stroke", stroke)
 			_current_project.undo_redo.add_undo_reference(stroke)
-			_current_project.undo_redo.add_undo_method(self, "_undo_delete_stroke", stroke)
+			_current_project.undo_redo.add_undo_method.call(self, "_undo_delete_stroke", stroke)
 		_selection_tool.deselect_all_strokes()
 		_current_project.undo_redo.commit_action()
 		_current_project.dirty = true
@@ -352,7 +361,7 @@ func _delete_selected_strokes() -> void:
 # -------------------------------------------------------------------------------------------------
 func _do_delete_stroke(stroke: BrushStroke) -> void:
 	var index := _current_project.strokes.find(stroke)
-	_current_project.strokes.remove(index)
+	_current_project.strokes.remove_at(index)
 	_strokes_parent.remove_child(stroke)
 	info.point_count -= stroke.points.size()
 	info.stroke_count -= 1

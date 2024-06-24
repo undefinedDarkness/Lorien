@@ -1,4 +1,4 @@
-extends WindowDialog
+extends Window
 
 # -------------------------------------------------------------------------------------------------
 const THEME_DARK_INDEX 	:= 0
@@ -22,34 +22,34 @@ signal grid_size_changed(size)
 signal grid_pattern_changed(pattern)
 
 # -------------------------------------------------------------------------------------------------
-onready var _tab_container: TabContainer = $MarginContainer/TabContainer
-onready var _tab_general: Control = $MarginContainer/TabContainer/General
-onready var _tab_appearance: Control = $MarginContainer/TabContainer/Appearance
-onready var _tab_rendering: Control = $MarginContainer/TabContainer/Rendering
-onready var _pressure_sensitivity: SpinBox = $MarginContainer/TabContainer/General/VBoxContainer/PressureSensitivity/PressureSensitivity
-onready var _brush_size: SpinBox = $MarginContainer/TabContainer/General/VBoxContainer/DefaultBrushSize/DefaultBrushSize
-onready var _canvas_color: ColorPickerButton = $MarginContainer/TabContainer/Appearance/VBoxContainer/CanvasColor/CanvasColor
-onready var _project_dir: LineEdit = $MarginContainer/TabContainer/General/VBoxContainer/DefaultSaveDir/DefaultSaveDir
-onready var _theme: OptionButton = $MarginContainer/TabContainer/Appearance/VBoxContainer/Theme/Theme
-onready var _aa_mode: OptionButton = $MarginContainer/TabContainer/Rendering/VBoxContainer/AntiAliasing/AntiAliasing
-onready var _foreground_fps: SpinBox = $MarginContainer/TabContainer/Rendering/VBoxContainer/TargetFramerate/TargetFramerate
-onready var _background_fps: SpinBox = $MarginContainer/TabContainer/Rendering/VBoxContainer/BackgroundFramerate/BackgroundFramerate
-onready var _general_restart_label: Label = $MarginContainer/TabContainer/General/VBoxContainer/RestartLabel
-onready var _appearence_restart_label: Label = $MarginContainer/TabContainer/Appearance/VBoxContainer/RestartLabel
-onready var _rendering_restart_label: Label = $MarginContainer/TabContainer/Rendering/VBoxContainer/RestartLabel
-onready var _language_options: OptionButton = $MarginContainer/TabContainer/General/VBoxContainer/Language/OptionButton
-onready var _brush_rounding_options: OptionButton = $MarginContainer/TabContainer/Rendering/VBoxContainer/BrushRounding/OptionButton
-onready var _ui_scale_options: OptionButton = $MarginContainer/TabContainer/Appearance/VBoxContainer/UIScale/HBoxContainer/UIScaleOptions
-onready var _ui_scale: SpinBox = $MarginContainer/TabContainer/Appearance/VBoxContainer/UIScale/HBoxContainer/UIScale
-onready var _grid_size: SpinBox = $MarginContainer/TabContainer/Appearance/VBoxContainer/GridSize/GridSize
-onready var _grid_pattern: OptionButton = $MarginContainer/TabContainer/Appearance/VBoxContainer/GridPattern/GridPattern
-onready var _tool_pressure: SpinBox = $MarginContainer/TabContainer/General/VBoxContainer/DefaultToolPressure/DefaultToolPressure
+@onready var _tab_container: TabContainer = $MarginContainer/TabContainer
+@onready var _tab_general: Control = $MarginContainer/TabContainer/General
+@onready var _tab_appearance: Control = $MarginContainer/TabContainer/Appearance
+@onready var _tab_rendering: Control = $MarginContainer/TabContainer/Rendering
+@onready var _pressure_sensitivity: SpinBox = $MarginContainer/TabContainer/General/VBoxContainer/PressureSensitivity/PressureSensitivity
+@onready var _brush_size: SpinBox = $MarginContainer/TabContainer/General/VBoxContainer/DefaultBrushSize/DefaultBrushSize
+@onready var _canvas_color: ColorPickerButton = $MarginContainer/TabContainer/Appearance/VBoxContainer/CanvasColor/CanvasColor
+@onready var _project_dir: LineEdit = $MarginContainer/TabContainer/General/VBoxContainer/DefaultSaveDir/DefaultSaveDir
+@onready var _theme: OptionButton = $MarginContainer/TabContainer/Appearance/VBoxContainer/Theme/Theme
+@onready var _aa_mode: OptionButton = $MarginContainer/TabContainer/Rendering/VBoxContainer/AntiAliasing/AntiAliasing
+@onready var _foreground_fps: SpinBox = $MarginContainer/TabContainer/Rendering/VBoxContainer/TargetFramerate/TargetFramerate
+@onready var _background_fps: SpinBox = $MarginContainer/TabContainer/Rendering/VBoxContainer/BackgroundFramerate/BackgroundFramerate
+@onready var _general_restart_label: Label = $MarginContainer/TabContainer/General/VBoxContainer/RestartLabel
+@onready var _appearence_restart_label: Label = $MarginContainer/TabContainer/Appearance/VBoxContainer/RestartLabel
+@onready var _rendering_restart_label: Label = $MarginContainer/TabContainer/Rendering/VBoxContainer/RestartLabel
+@onready var _language_options: OptionButton = $MarginContainer/TabContainer/General/VBoxContainer/Language/OptionButton
+@onready var _brush_rounding_options: OptionButton = $MarginContainer/TabContainer/Rendering/VBoxContainer/BrushRounding/OptionButton
+@onready var _ui_scale_options: OptionButton = $MarginContainer/TabContainer/Appearance/VBoxContainer/UIScale/HBoxContainer/UIScaleOptions
+@onready var _ui_scale: SpinBox = $MarginContainer/TabContainer/Appearance/VBoxContainer/UIScale/HBoxContainer/UIScale
+@onready var _grid_size: SpinBox = $MarginContainer/TabContainer/Appearance/VBoxContainer/GridSize/GridSize
+@onready var _grid_pattern: OptionButton = $MarginContainer/TabContainer/Appearance/VBoxContainer/GridPattern/GridPattern
+@onready var _tool_pressure: SpinBox = $MarginContainer/TabContainer/General/VBoxContainer/DefaultToolPressure/DefaultToolPressure
 
 # -------------------------------------------------------------------------------------------------
 func _ready():
 	_set_values()
 	_apply_language()
-	GlobalSignals.connect("language_changed", self, "_apply_language")
+	GlobalSignals.connect("language_changed", Callable(self, "_apply_language"))
 
 # -------------------------------------------------------------------------------------------------
 func _apply_language() -> void:
@@ -132,8 +132,8 @@ func _set_languages(current_locale: String) -> void:
 
 #--------------------------------------------------------------------------------------------------
 func _set_UIScale_range():
-	var screen_scale_max: float = (OS.get_screen_size().x * OS.get_screen_size().y) / (ProjectSettings.get_setting("display/window/size/width") * ProjectSettings.get_setting("display/window/size/height"))
-	var screen_scale_min: float = OS.get_screen_size().x / ProjectSettings.get_setting("display/window/size/width")
+	var screen_scale_max: float = (DisplayServer.screen_get_size().x * DisplayServer.screen_get_size().y) / (ProjectSettings.get_setting("display/window/size/viewport_width") * ProjectSettings.get_setting("display/window/size/viewport_height"))
+	var screen_scale_min: float = DisplayServer.screen_get_size().x / ProjectSettings.get_setting("display/window/size/viewport_width")
 	_ui_scale.min_value = max(screen_scale_min / 2, 0.5)
 	_ui_scale.max_value = screen_scale_max + 1.5
 
@@ -176,8 +176,8 @@ func _on_PressureSensitivity_value_changed(value: float):
 func _on_DefaultSaveDir_text_changed(text: String) -> void:
 	text = text.replace("\\", "/")
 	
-	var dir = Directory.new()
-	if dir.dir_exists(text):
+	#var dir = DirAccess.new()
+	if DirAccess.dir_exists_absolute(text):
 		Settings.set_value(Settings.GENERAL_DEFAULT_PROJECT_DIR, text)
 
 # -------------------------------------------------------------------------------------------------
@@ -185,7 +185,7 @@ func _on_Target_Fps_Foreground_changed(value: int) -> void:
 	Settings.set_value(Settings.RENDERING_FOREGROUND_FPS, value)
 
 	# Settings FPS so user instantly Sees fps Change else fps only changes after unfocusing
-	Engine.target_fps = value
+	Engine.max_fps = value
 
 # -------------------------------------------------------------------------------------------------
 func _on_Target_Fps_Background_changed(value: int) -> void:

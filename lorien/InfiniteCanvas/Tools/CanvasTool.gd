@@ -1,4 +1,6 @@
-class_name CanvasTool, "res://Assets/Icons/tools.png"
+@icon("res://Assets/Icons/tools.png")
+
+class_name CanvasTool
 extends Node
 
 # -------------------------------------------------------------------------------------------------
@@ -6,11 +8,11 @@ const SUBDIVISION_PERCENT := 0.16
 const SUBDIVISION_THRESHHOLD := 50.0 # min length in pixels for when subdivision is required 
 
 # -------------------------------------------------------------------------------------------------
-export var cursor_path: NodePath
+@export var cursor_path: NodePath
 
-var _cursor: Sprite # This is a BaseCursor. Can't type it.
-var _canvas: Node # This is an InfinteCanvas. Can't type it though because of cyclic dependency bugs...
-var enabled := false setget set_enabled, get_enabled
+var _cursor: Sprite2D # This is a BaseCursor. Can't type it.
+var _canvas: InfiniteCanvas # This is an InfinteCanvas. Can't type it though because of cyclic dependency bugs...
+var enabled := false: get = get_enabled, set = set_enabled
 var performing_stroke := false
 
 # -------------------------------------------------------------------------------------------------
@@ -90,7 +92,7 @@ func end_stroke() -> void:
 
 # -------------------------------------------------------------------------------------------------
 func xform_vector2(v: Vector2) -> Vector2:
-	return _canvas.get_camera().xform(v * _canvas.get_canvas_scale())
+	return _canvas.get_camera_3d().get_target_position() * (v * _canvas.get_canvas_scale())
 
 # -------------------------------------------------------------------------------------------------
 func reset() -> void:
